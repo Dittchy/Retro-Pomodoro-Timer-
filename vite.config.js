@@ -8,13 +8,7 @@ export default defineConfig({
   base: '/Retro-Pomodoro-Timer-/',
   plugins: [
     react(),
-    legacy({
-      targets: ['defaults', 'not IE 11']
-    }),
-    legacy({
-      targets: ['defaults', 'not IE 11']
-    }),
-    // VitePWA({...}) - DISABLED: Causing White Screen on Mobile
+    // VitePWA({...}) - DISABLED
   ],
   build: {
     target: 'es2015'
