@@ -215,7 +215,7 @@ function App() {
           )}
         >
           <LCDScreen
-            mainDisplay={isBooting ? (userSettings.bootMessage || "Hi! Prezz..") : formatTime(timeLeft)}
+            mainDisplay={isBooting ? (userSettings.bootMessage || "SYSTEM v2.0") : formatTime(timeLeft)}
             subDisplay={realTime}
             label={currentPreset.name.toUpperCase()}
             mode={mode}
