@@ -1,7 +1,7 @@
 import React from 'react';
 import { clsx } from 'clsx';
 
-export const LCDScreen = ({ mainDisplay, subDisplay, label, mode, isActive, progress }) => {
+export const LCDScreen = ({ mainDisplay, subDisplay, label, mode, isActive, progress, isBooting }) => {
     const isBreak = mode === 'shortBreak' || mode === 'longBreak';
 
     // Dynamic glow color
@@ -20,43 +20,57 @@ export const LCDScreen = ({ mainDisplay, subDisplay, label, mode, isActive, prog
                 style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '20px 20px' }}
             />
 
-            {/* Top Info Bar */}
-            <div className={clsx("flex justify-between items-center text-sm tracking-widest uppercase opacity-80 z-10", glowClass)}>
-                <span className="flex items-center gap-2">
-                    {isActive && <span className="animate-pulse">●</span>}
-                    {mode === 'focus' ? 'FOCUS' : 'BREAK'}
-                </span>
-                <span className="font-lcd text-xl">{subDisplay}</span>
-            </div>
-
-            {/* Main Display */}
-            <div className={clsx(
-                "flex-1 flex items-center justify-center z-10 transition-all duration-300",
-                glowClass,
-                isActive && "animate-[pulse-slow_4s_infinite]"
-            )}>
-                <div className="text-[5rem] leading-none font-lcd tracking-wider relative">
-                    {/* We assume mainDisplay is formatted like "25:00" */}
-                    {mainDisplay.split('').map((char, i) => (
-                        <span key={i} className={char === ':' && isActive ? "animate-blink" : ""}>{char}</span>
-                    ))}
+            {isBooting ? (
+                <div className={clsx("absolute inset-0 flex items-center justify-center animate-[fadeIn_1s_ease-out]", glowClass)}>
+                    <div className="text-center space-y-4">
+                        <div className="text-4xl md:text-5xl font-lcd tracking-widest animate-pulse uppercase">
+                            {mainDisplay}
+                        </div>
+                        {/* Loading Bar Animation */}
+                        <div className="h-1 w-24 bg-current opacity-50 mx-auto rounded animate-[ping_1.5s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <>
+                    {/* Top Info Bar */}
+                    <div className={clsx("flex justify-between items-center text-sm tracking-widest uppercase opacity-80 z-10", glowClass)}>
+                        <span className="flex items-center gap-2">
+                            {isActive && <span className="animate-pulse">●</span>}
+                            {mode === 'focus' ? 'FOCUS' : 'BREAK'}
+                        </span>
+                        <span className="font-lcd text-xl">{subDisplay}</span>
+                    </div>
 
-            {/* Bottom Label & Progress */}
-            <div className="z-10 space-y-2">
-                <div className={clsx("text-center text-xs uppercase tracking-[0.2em] opacity-60", glowClass)}>
-                    {label}
-                </div>
+                    {/* Main Display */}
+                    <div className={clsx(
+                        "flex-1 flex items-center justify-center z-10 transition-all duration-300",
+                        glowClass,
+                        isActive && "animate-[pulse-slow_4s_infinite]"
+                    )}>
+                        <div className="text-[5rem] leading-none font-lcd tracking-wider relative">
+                            {/* We assume mainDisplay is formatted like "25:00" */}
+                            {mainDisplay.split('').map((char, i) => (
+                                <span key={i} className={char === ':' && isActive ? "animate-blink" : ""}>{char}</span>
+                            ))}
+                        </div>
+                    </div>
 
-                {/* Retro Progress Bar */}
-                <div className="h-2 w-full bg-gray-900/50 rounded-none border border-gray-700/50 relative overflow-hidden">
-                    <div
-                        className={clsx("h-full transition-all duration-1000 ease-linear shadow-[0_0_10px_currentColor]", progressColor)}
-                        style={{ width: `${progress}%` }}
-                    />
-                </div>
-            </div>
+                    {/* Bottom Label & Progress */}
+                    <div className="z-10 space-y-2">
+                        <div className={clsx("text-center text-xs uppercase tracking-[0.2em] opacity-60", glowClass)}>
+                            {label}
+                        </div>
+
+                        {/* Retro Progress Bar */}
+                        <div className="h-2 w-full bg-gray-900/50 rounded-none border border-gray-700/50 relative overflow-hidden">
+                            <div
+                                className={clsx("h-full transition-all duration-1000 ease-linear shadow-[0_0_10px_currentColor]", progressColor)}
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

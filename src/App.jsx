@@ -25,7 +25,8 @@ function App() {
   const [activePresetId, setActivePresetId] = useState(() => localStorage.getItem('pomo-active-preset') || 'std');
   const [userSettings, setUserSettings] = useState(() => {
     const saved = localStorage.getItem('pomo-settings');
-    return saved ? JSON.parse(saved) : { sound: true, haptics: true, autoBreak: false };
+    // Ensure username property exists
+    return saved ? { username: '', ...JSON.parse(saved) } : { sound: true, haptics: true, autoBreak: false, username: '' };
   });
 
   // SESSION STATE
@@ -34,6 +35,9 @@ function App() {
   const [timeLeft, setTimeLeft] = useState(currentPreset.focus * 60);
   const [isActive, setIsActive] = useState(false);
   const [realTime, setRealTime] = useState(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
+
+  // BOOT SEQUENCE STATE
+  const [isBooting, setIsBooting] = useState(true);
 
   // MODAL STATE
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -89,6 +93,15 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Boot Sequence Logic
+  useEffect(() => {
+    // Start boot sequence on mount
+    const timer = setTimeout(() => {
+      setIsBooting(false);
+    }, 3000); // 3 seconds boot animation
+    return () => clearTimeout(timer);
+  }, []);
+
   // Timer Logic
   useEffect(() => {
     let interval = null;
@@ -105,6 +118,7 @@ function App() {
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (isBooting) return; // Disable keys during boot
       if (e.code === 'Space') {
         e.preventDefault();
         toggleTimer();
@@ -114,7 +128,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, mode]);
+  }, [isActive, mode, isBooting]);
 
   // Persist State
   useEffect(() => {
@@ -193,20 +207,21 @@ function App() {
         <div className="h-4"></div>
 
         {/* LCD Screen */}
-        <div onClick={() => !isActive && setIsPresetSelectorOpen(true)} className="cursor-pointer group">
+        <div onClick={() => !isActive && !isBooting && setIsPresetSelectorOpen(true)} className={clsx("cursor-pointer group", isBooting && "pointer-events-none")}>
           <LCDScreen
-            mainDisplay={formatTime(timeLeft)}
+            mainDisplay={isBooting ? `HI ${userSettings.username || 'COMMANDER'}` : formatTime(timeLeft)}
             subDisplay={realTime}
             label={currentPreset.name.toUpperCase()}
             mode={mode}
             isActive={isActive}
             progress={100 - progress}
+            isBooting={isBooting}
           />
-          {!isActive && <div className="text-center text-[9px] text-gray-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">TAP TO CHANGE MODE</div>}
+          {!isActive && !isBooting && <div className="text-center text-[9px] text-gray-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">TAP TO CHANGE MODE</div>}
         </div>
 
         {/* Control Deck */}
-        <div className="flex-1 flex flex-col justify-end gap-3 pb-2">
+        <div className={clsx("flex-1 flex flex-col justify-end gap-3 pb-2 transition-opacity duration-1000", isBooting ? "opacity-0 pointer-events-none" : "opacity-100")}>
 
           {/* Main Action Buttons */}
           <div className="grid grid-cols-2 gap-4">
