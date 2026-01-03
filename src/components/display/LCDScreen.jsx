@@ -21,7 +21,7 @@ export const LCDScreen = ({ mainDisplay, subDisplay, label, mode, isActive, prog
             />
 
             {isBooting ? (
-                <div className={clsx("absolute inset-0 flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease-out]", bgClass)}>
+                <div className={clsx("absolute inset-0 flex flex-col items-center justify-center animate-[fadeIn_2s_ease-out]", bgClass)}>
                     {/* Redmi Style Logo Area */}
                     <div className="flex-1 flex flex-col items-center justify-center">
                         <div className="text-4xl md:text-5xl font-sans font-bold tracking-tight text-white mb-2 drop-shadow-md">

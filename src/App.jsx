@@ -98,7 +98,7 @@ function App() {
     // Start boot sequence on mount
     const timer = setTimeout(() => {
       setIsBooting(false);
-    }, 3000); // 3 seconds boot animation
+    }, 5000); // 5 seconds boot animation
     return () => clearTimeout(timer);
   }, []);
 
