@@ -40,6 +40,9 @@ function App() {
   const [realTime, setRealTime] = useState(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
   const [showSettings, setShowSettings] = useState(false);
 
+  // NEW PRESET FORM
+  const [newPreset, setNewPreset] = useState({ name: '', focus: 25, short: 5, long: 15 });
+
   // REFS & HOOKS
   const { requestWakeLock, releaseWakeLock } = useWakeLock();
 
@@ -91,7 +94,30 @@ function App() {
   useEffect(() => {
     localStorage.setItem('pomo-settings', JSON.stringify(userSettings));
     localStorage.setItem('pomo-active-preset', activePresetId);
-  }, [userSettings, activePresetId]);
+    localStorage.setItem('pomo-settings', JSON.stringify(userSettings));
+    localStorage.setItem('pomo-active-preset', activePresetId);
+    localStorage.setItem('pomo-presets', JSON.stringify(presets));
+  }, [userSettings, activePresetId, presets]);
+
+  // PRESET MANAGEMENT
+  const handleDeletePreset = (id) => {
+    if (presets.length <= 1) return;
+    const newPresets = presets.filter(p => p.id !== id);
+    setPresets(newPresets);
+    if (activePresetId === id) {
+      setActivePresetId(newPresets[0].id);
+      // Reset timer will happen due to effect dependency or manual call if needed, 
+      // but let's be safe and let the user reset or just let state update naturally.
+    }
+  };
+
+  const handleCreatePreset = () => {
+    if (!newPreset.name) return;
+    const id = 'custom-' + Date.now();
+    const presetToAdd = { ...newPreset, id, name: newPreset.name.substring(0, 10) }; // Limit name length
+    setPresets([...presets, presetToAdd]);
+    setNewPreset({ name: '', focus: 25, short: 5, long: 15 });
+  };
 
   // ACTIONS
   const toggleTimer = () => {
@@ -251,7 +277,7 @@ function App() {
 
         {/* Settings Panel (Overlay) */}
         {showSettings && (
-          <div className="absolute inset-x-4 bottom-20 bg-gray-800/95 backdrop-blur-md rounded-xl border border-gray-600 p-4 z-50 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+          <div className="absolute inset-x-4 bottom-20 bg-gray-800/95 backdrop-blur-md rounded-xl border border-gray-600 p-4 z-50 shadow-2xl animate-[fadeIn_0.2s_ease-out] max-h-[60vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
               <h3 className="text-sm font-bold tracking-widest text-white uppercase">System Config</h3>
               <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-white">✕</button>
@@ -285,6 +311,81 @@ function App() {
                   className={clsx("w-10 h-5 rounded-full relative transition-colors", userSettings.autoBreak ? "bg-green-500" : "bg-gray-600")}
                 >
                   <div className={clsx("absolute top-1 w-3 h-3 bg-white rounded-full transition-all", userSettings.autoBreak ? "left-6" : "left-1")} />
+                </button>
+              </div>
+            </div>
+
+            {/* PRESET MANAGER */}
+            <div className="mt-6 pt-4 border-t border-gray-700 space-y-4">
+              <h3 className="text-sm font-bold tracking-widest text-white uppercase mb-2">Manage Presets</h3>
+
+              {/* List */}
+              <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
+                {presets.map(p => (
+                  <div key={p.id} className="flex items-center justify-between text-xs bg-gray-900/50 p-2 rounded border border-gray-700">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-gray-300">{p.name}</span>
+                      <span className="text-[10px] text-gray-500">{p.focus}m / {p.short}m / {p.long}m</span>
+                    </div>
+                    {presets.length > 1 && (
+                      <button
+                        onClick={() => handleDeletePreset(p.id)}
+                        className="text-red-500 hover:text-red-400 p-1"
+                      >✕</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New */}
+              <div className="space-y-2 bg-gray-900/30 p-2 rounded border border-gray-700/50">
+                <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">New Preset</div>
+                <input
+                  type="text"
+                  placeholder="NAME (e.g. COOKING)"
+                  maxLength={10}
+                  value={newPreset.name}
+                  onChange={e => setNewPreset({ ...newPreset, name: e.target.value })}
+                  className="w-full bg-gray-950 border border-gray-700 rounded p-1.5 text-xs text-white placeholder-gray-600 focus:border-green-500 outline-none font-mono uppercase"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-gray-500">WORK</label>
+                    <input
+                      type="number"
+                      min="1" max="99"
+                      value={newPreset.focus}
+                      onChange={e => setNewPreset({ ...newPreset, focus: parseInt(e.target.value) || 1 })}
+                      className="w-full bg-gray-950 border border-gray-700 rounded p-1 text-xs text-center text-green-400 font-mono"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-gray-500">SHORT</label>
+                    <input
+                      type="number"
+                      min="1" max="99"
+                      value={newPreset.short}
+                      onChange={e => setNewPreset({ ...newPreset, short: parseInt(e.target.value) || 1 })}
+                      className="w-full bg-gray-950 border border-gray-700 rounded p-1 text-xs text-center text-amber-400 font-mono"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] text-gray-500">LONG</label>
+                    <input
+                      type="number"
+                      min="1" max="99"
+                      value={newPreset.long}
+                      onChange={e => setNewPreset({ ...newPreset, long: parseInt(e.target.value) || 1 })}
+                      className="w-full bg-gray-950 border border-gray-700 rounded p-1 text-xs text-center text-amber-400 font-mono"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleCreatePreset}
+                  disabled={!newPreset.name}
+                  className="w-full bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-bold py-2 rounded uppercase tracking-widest border border-gray-600"
+                >
+                  Add Preset +
                 </button>
               </div>
             </div>
