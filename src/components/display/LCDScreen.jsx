@@ -21,13 +21,24 @@ export const LCDScreen = ({ mainDisplay, subDisplay, label, mode, isActive, prog
             />
 
             {isBooting ? (
-                <div className={clsx("absolute inset-0 flex items-center justify-center animate-[fadeIn_1s_ease-out]", glowClass)}>
-                    <div className="text-center space-y-4">
-                        <div className="text-4xl md:text-5xl font-lcd tracking-widest animate-pulse uppercase">
-                            {mainDisplay}
+                <div className={clsx("absolute inset-0 flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease-out]", bgClass)}>
+                    {/* Redmi Style Logo Area */}
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                        <div className="text-4xl md:text-5xl font-sans font-bold tracking-tight text-white mb-2 drop-shadow-md">
+                            Hi! Prezz..
                         </div>
-                        {/* Loading Bar Animation */}
-                        <div className="h-1 w-24 bg-current opacity-50 mx-auto rounded animate-[ping_1.5s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                    </div>
+
+                    {/* Footer Loading Indicators (Android/Redmi style) */}
+                    <div className="mb-8 flex flex-col items-center gap-2">
+                        <div className="flex gap-1">
+                            <div className="w-2 h-2 rounded-full bg-white animate-bounce [animation-delay:-0.32s]"></div>
+                            <div className="w-2 h-2 rounded-full bg-white animate-bounce [animation-delay:-0.16s]"></div>
+                            <div className="w-2 h-2 rounded-full bg-white animate-bounce"></div>
+                        </div>
+                        <div className="text-[10px] text-gray-500 font-sans tracking-widest uppercase">
+                            POWERED BY RETRO
+                        </div>
                     </div>
                 </div>
             ) : (
