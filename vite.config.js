@@ -5,7 +5,7 @@ import legacy from '@vitejs/plugin-legacy'
 
 export default defineConfig({
   // Base must be set for GitHub Pages to work correctly
-  base: './',
+  base: '/Retro-Pomodoro-Timer-/',
   plugins: [
     react(),
     legacy({
