@@ -13,10 +13,16 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// ReactDOM.createRoot(document.getElementById('root')).render(
+//   <React.StrictMode>
+//     <ErrorBoundary>
+//       <App />
+//     </ErrorBoundary>
+//   </React.StrictMode>,
+// )
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </React.StrictMode>,
+  <div style={{ color: 'white', padding: 20, fontSize: 30 }}>
+    REACT IS ALIVE <br />
+    VERSION: 3.0
+  </div>
 )
