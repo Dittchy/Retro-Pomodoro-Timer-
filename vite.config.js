@@ -11,7 +11,31 @@ export default defineConfig({
     legacy({
       targets: ['defaults', 'not IE 11']
     }),
-    // VitePWA(...) - Disabled for debugging
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      manifest: {
+        name: 'Retro Pomodoro 90',
+        short_name: 'RetroPomo',
+        description: 'Professional 90s Digital Pomodoro Timer',
+        theme_color: '#0f172a',
+        background_color: '#000000',
+        display: 'standalone',
+        orientation: 'portrait',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ],
   build: {
     target: 'es2015'

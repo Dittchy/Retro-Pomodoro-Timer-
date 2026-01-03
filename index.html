@@ -23,18 +23,6 @@
 </head>
 
 <body>
-  <h1
-    style="color:red; font-size:40px; position:absolute; top:0; left:0; z-index:9999; background:white; padding:10px; width:100%;">
-    TEST: <span id="js-status">JS FAILED</span>
-  </h1>
-  <script>
-    try {
-      document.getElementById('js-status').innerText = "JS OK";
-      document.body.style.backgroundColor = "lightgreen";
-    } catch (e) {
-      alert("Inline JS Error: " + e);
-    }
-  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
