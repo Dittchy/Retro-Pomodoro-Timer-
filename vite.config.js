@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Base must be set for GitHub Pages to work correctly
+  // If your repo is 'my-project', this ensures assets are loaded from /my-project/
+  base: './',
   plugins: [
     react(),
     VitePWA({
