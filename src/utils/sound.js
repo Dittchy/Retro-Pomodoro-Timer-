@@ -4,7 +4,11 @@ const getAudioContext = () => {
     if (!audioContext) {
         const AudioCtor = window.AudioContext || window.webkitAudioContext;
         if (AudioCtor) {
-            audioContext = new AudioCtor();
+            try {
+                audioContext = new AudioCtor();
+            } catch (e) {
+                console.error("Audio init failed:", e);
+            }
         }
     }
     return audioContext;
