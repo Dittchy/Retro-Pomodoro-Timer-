@@ -1,16 +1,31 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="Professional 90s Digital Pomodoro Timer for productivity and deep work. Features custom presets, smart break logic, and a retro-futuristic interface." />
-    <meta name="theme-color" content="#0f172a" />
-    <title>Retro Pomodoro 90</title>
-    <script type="module" crossorigin src="./assets/index-YU6uZJEd.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-rDeuAF1I.css">
-  <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
-  <body>
-    <div id="root"></div>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description"
+    content="Professional 90s Digital Pomodoro Timer for productivity and deep work. Features custom presets, smart break logic, and a retro-futuristic interface." />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Retro Pomodoro 90</title>
+  <script>
+    window.onerror = function (msg, url, line, col, error) {
+      // Prevent alert loops
+      if (window.hasAlertedError) return;
+      window.hasAlertedError = true;
+
+      var extra = error ? "\nStack: " + error.stack : "";
+      alert("System Error:\n" + msg + "\nLine: " + line + extra);
+      return false;
+    };
+  </script>
+  <script type="module" crossorigin src="./assets/index-DdB4IYAz.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CTNoAdrh.css">
+<link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
+
+<body>
+  <div id="root"></div>
+</body>
+
 </html>
