@@ -21,16 +21,16 @@ export const SettingsModal = ({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="System Configuration">
-            {/* USER PROFILE */}
+            {/* BOOT CONFIG */}
             <div className="mb-6 bg-gray-800/50 p-3 rounded-lg border border-gray-700 space-y-2">
-                <div className="text-[10px] font-bold text-gray-400 uppercase">Pilot Name</div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase">Boot Message</div>
                 <input
                     type="text"
-                    placeholder="ENTER NAME"
-                    maxLength={10}
-                    value={userSettings.username || ''}
-                    onChange={(e) => onUpdateSettings({ username: e.target.value.toUpperCase() })}
-                    className="w-full bg-black border border-gray-700 rounded p-2 text-sm text-green-400 placeholder-gray-600 focus:border-green-500 outline-none uppercase font-mono tracking-widest text-center"
+                    placeholder="Hi! Prezz.."
+                    maxLength={20}
+                    value={userSettings.bootMessage || ''}
+                    onChange={(e) => onUpdateSettings({ bootMessage: e.target.value })}
+                    className="w-full bg-black border border-gray-700 rounded p-2 text-sm text-green-400 placeholder-gray-600 focus:border-green-500 outline-none font-sans font-bold tracking-tight text-center"
                 />
             </div>
 

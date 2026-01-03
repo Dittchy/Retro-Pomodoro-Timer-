@@ -207,9 +207,15 @@ function App() {
         <div className="h-4"></div>
 
         {/* LCD Screen */}
-        <div onClick={() => !isActive && !isBooting && setIsPresetSelectorOpen(true)} className={clsx("w-full h-48 cursor-pointer group relative", isBooting && "pointer-events-none")}>
+        <div
+          onClick={() => !isActive && !isBooting && setIsPresetSelectorOpen(true)}
+          className={clsx(
+            "transition-all duration-500 ease-in-out",
+            isBooting ? "absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#050505] p-6 rounded-3xl" : "w-full h-48 cursor-pointer group relative z-20"
+          )}
+        >
           <LCDScreen
-            mainDisplay={isBooting ? `HI ${userSettings.username || 'COMMANDER'}` : formatTime(timeLeft)}
+            mainDisplay={isBooting ? (userSettings.bootMessage || "Hi! Prezz..") : formatTime(timeLeft)}
             subDisplay={realTime}
             label={currentPreset.name.toUpperCase()}
             mode={mode}
