@@ -207,7 +207,7 @@ function App() {
         <div className="h-4"></div>
 
         {/* LCD Screen */}
-        <div onClick={() => !isActive && !isBooting && setIsPresetSelectorOpen(true)} className={clsx("cursor-pointer group", isBooting && "pointer-events-none")}>
+        <div onClick={() => !isActive && !isBooting && setIsPresetSelectorOpen(true)} className={clsx("w-full h-48 cursor-pointer group relative", isBooting && "pointer-events-none")}>
           <LCDScreen
             mainDisplay={isBooting ? `HI ${userSettings.username || 'COMMANDER'}` : formatTime(timeLeft)}
             subDisplay={realTime}
