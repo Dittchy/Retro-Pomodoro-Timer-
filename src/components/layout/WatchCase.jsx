@@ -1,40 +1,58 @@
 import React from 'react';
-import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 export const WatchCase = ({ children, className }) => {
     return (
         <div className={twMerge(
-            "relative p-8 flex flex-col items-center justify-center gap-6",
-            // GA-2100 Octagonal Shape Profile (CasiOak)
-            // We use a complex clip-path or border-radius trick. 
-            // Tailwind doesn't have a native octagon, so we style the container to look like rugged resin.
-            "bg-[#1a1a1a] rounded-[2.5rem] shadow-2xl",
-            "before:content-[''] before:absolute before:inset-0 before:bg-[#111] before:rounded-[2.2rem] before:m-1 before:-z-10",
-            // Octagonal Bezel Simulation
-            "border-[12px] border-[#0a0a0a]",
-            "max-w-md w-full aspect-[4/5] mx-auto",
+            "relative flex flex-col items-center justify-center",
+            "w-[380px] h-[460px] mx-auto", // Fixed dimensions for authentic proportion
             className
         )}>
-            {/* Texture: Matte Resin */}
-            <div className="absolute inset-0 rounded-[2rem] pointer-events-none opacity-50 bg-[url('https://www.transparenttextures.com/patterns/black-felt.png')] mix-blend-overlay z-0"></div>
 
-            {/* Decorative Bezel Text (G-SHOCK style branding) */}
-            <div className="absolute top-[2px] left-0 right-0 text-center text-[8px] font-black tracking-[0.4em] text-gray-600 uppercase z-10 select-none">Protection</div>
-            <div className="absolute bottom-[2px] left-0 right-0 text-center text-[8px] font-black tracking-[0.4em] text-gray-600 uppercase z-10 select-none">Shock Resist</div>
-
-            {/* Side Button Simulation (Left) */}
-            <div className="absolute -left-[16px] top-1/4 w-3 h-12 bg-[#0a0a0a] rounded-l-md border-l border-t border-b border-gray-800 shadow-lg"></div>
-            <div className="absolute -left-[16px] bottom-1/4 w-3 h-12 bg-[#0a0a0a] rounded-l-md border-l border-t border-b border-gray-800 shadow-lg"></div>
-
-            {/* Side Button Simulation (Right) */}
-            <div className="absolute -right-[16px] top-1/4 w-3 h-12 bg-[#0a0a0a] rounded-r-md border-r border-t border-b border-gray-800 shadow-lg"></div>
-            <div className="absolute -right-[16px] bottom-1/4 w-3 h-12 bg-[#0a0a0a] rounded-r-md border-r border-t border-b border-gray-800 shadow-lg"></div>
-
-            {/* Inner Face Content */}
-            <div className="relative z-10 w-full h-full flex flex-col justify-between">
-                {children}
+            {/* 1. MAIN CASE BODY (The "Oak" Octagon) */}
+            <div
+                className="absolute inset-0 bg-[#1a1a1a] shadow-2xl z-0"
+                style={{
+                    // Authentic GA-2100 Octagon shape using clip-path
+                    clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)"
+                }}
+            >
+                {/* Inner Bevel Highlight */}
+                <div className="absolute inset-1 bg-[#151515]" style={{ clipPath: "inherit" }}></div>
             </div>
+
+            {/* 2. THE BEZEL (Circular/Octagonal Hybrid) */}
+            {/* The GA-2100 has a circular dial inside an octagon bezel */}
+            <div className="absolute inset-4 rounded-full bg-[#0a0a0a] border-[16px] border-[#1a1a1a] shadow-[inset_0_0_20px_black] z-10 flex flex-col items-center justify-center p-6 text-center">
+
+                {/* ENGRAVINGS */}
+                {/* Top Text (Curved Effect Simulated with spacing) */}
+                <div className="absolute top-1 font-black text-[9px] text-gray-500 tracking-[0.3em] uppercase select-none w-full">
+                    G-SHOCK
+                </div>
+                <div className="absolute top-1 left-8 transform -rotate-12 text-[7px] text-gray-600 font-bold tracking-wider select-none">ADJUST</div>
+                <div className="absolute top-1 right-8 transform rotate-12 text-[7px] text-gray-600 font-bold tracking-wider select-none">LIGHT</div>
+
+                {/* Bottom Text */}
+                <div className="absolute bottom-1 font-black text-[9px] text-gray-500 tracking-[0.2em] uppercase select-none w-full">
+                    PROTECTION
+                </div>
+                <div className="absolute bottom-1 left-8 transform rotate-12 text-[7px] text-gray-600 font-bold tracking-wider select-none">MODE</div>
+                <div className="absolute bottom-1 right-8 transform -rotate-12 text-[7px] text-gray-600 font-bold tracking-wider select-none">START</div>
+
+                {/* 3. INNER FACE (The actual UI container) */}
+                {/* This is where the React children (LCD etc) go */}
+                <div className="w-full h-full rounded-full bg-[#050505] relative overflow-hidden flex flex-col justify-between p-4 z-20 shadow-inner ring-1 ring-gray-800">
+                    {children}
+                </div>
+            </div>
+
+            {/* 4. BUTTONS (Physical protrusions) */}
+            <div className="absolute -left-1 top-[30%] w-2 h-10 bg-[#222] rounded-l active:scale-90 transition-transform cursor-pointer border-r border-[#111]"></div>
+            <div className="absolute -left-1 bottom-[30%] w-2 h-10 bg-[#222] rounded-l active:scale-90 transition-transform cursor-pointer border-r border-[#111]"></div>
+            <div className="absolute -right-1 top-[30%] w-2 h-10 bg-[#222] rounded-r active:scale-90 transition-transform cursor-pointer border-l border-[#111]"></div>
+            <div className="absolute -right-1 bottom-[30%] w-2 h-10 bg-[#222] rounded-r active:scale-90 transition-transform cursor-pointer border-l border-[#111]"></div>
+
         </div>
     );
 };
