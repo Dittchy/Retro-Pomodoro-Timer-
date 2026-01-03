@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WatchCase } from './components/layout/WatchCase';
 import { LCDScreen } from './components/display/LCDScreen';
 import { Button } from './components/controls/Button';
+import { SettingsModal } from './components/modals/SettingsModal';
+import { PresetSelectorModal } from './components/modals/PresetSelectorModal';
 import { useWakeLock } from './hooks/useWakeLock';
 import { playStartSound, playStopSound, playCompleteSound } from './utils/sound';
-import { Play, Pause, RotateCcw, Settings, Volume2, VolumeX, Smartphone, Battery, Signal } from 'lucide-react';
+import { Play, Pause, RotateCcw, Settings, Clock, List } from 'lucide-react';
 import { clsx } from 'clsx';
 
 // Constants
@@ -13,12 +15,6 @@ const DEFAULT_PRESETS = [
   { id: 'deep', name: 'Deep Work', focus: 50, short: 10, long: 20 },
   { id: 'quick', name: 'Quick Hit', focus: 15, short: 3, long: 5 },
 ];
-
-const MODES = {
-  focus: { label: 'FOCUS', color: 'green' },
-  shortBreak: { label: 'SHORT BREAK', color: 'amber' },
-  longBreak: { label: 'LONG BREAK', color: 'amber' }
-};
 
 function App() {
   // PERSISTED STATE
@@ -38,13 +34,52 @@ function App() {
   const [timeLeft, setTimeLeft] = useState(currentPreset.focus * 60);
   const [isActive, setIsActive] = useState(false);
   const [realTime, setRealTime] = useState(new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
-  const [showSettings, setShowSettings] = useState(false);
 
-  // NEW PRESET FORM
-  const [newPreset, setNewPreset] = useState({ name: '', focus: 25, short: 5, long: 15 });
+  // MODAL STATE
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPresetSelectorOpen, setIsPresetSelectorOpen] = useState(false);
 
   // REFS & HOOKS
   const { requestWakeLock, releaseWakeLock } = useWakeLock();
+
+  // HANDLERS
+  const handleUpdateSettings = (newSettings) => {
+    setUserSettings(prev => ({ ...prev, ...newSettings }));
+  };
+
+  const handleAddPreset = (preset) => {
+    const id = 'custom-' + Date.now();
+    const presetToAdd = { ...preset, id, name: preset.name.substring(0, 12) };
+    setPresets([...presets, presetToAdd]);
+  };
+
+  const handleDeletePreset = (id) => {
+    if (presets.length <= 1) return;
+    const newPresets = presets.filter(p => p.id !== id);
+    setPresets(newPresets);
+    if (activePresetId === id) {
+      // Fallback to first available if active was deleted
+      const next = newPresets[0];
+      setActivePresetId(next.id);
+      resetTimerWithPreset(next);
+    }
+  };
+
+  const handleSelectPreset = (id) => {
+    setActivePresetId(id);
+    const newPreset = presets.find(p => p.id === id);
+    resetTimerWithPreset(newPreset);
+  };
+
+  const resetTimerWithPreset = (preset) => {
+    if (!preset) return;
+    setIsActive(false);
+    // Determine duration based on CURRENT mode but NEW preset
+    const duration = mode === 'focus' ? preset.focus
+      : mode === 'shortBreak' ? preset.short
+        : preset.long;
+    setTimeLeft(duration * 60);
+  };
 
   // Real-time Clock
   useEffect(() => {
@@ -57,30 +92,21 @@ function App() {
   // Timer Logic
   useEffect(() => {
     let interval = null;
-
-    // Wake Lock management
-    if (isActive) {
-      requestWakeLock();
-    } else {
-      releaseWakeLock();
-    }
+    if (isActive) requestWakeLock(); else releaseWakeLock();
 
     if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
+      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     } else if (timeLeft === 0 && isActive) {
       handleComplete();
     }
-
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, requestWakeLock, releaseWakeLock]);
+  }, [isActive, timeLeft]);
 
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.code === 'Space') {
-        e.preventDefault(); // Prevent scrolling
+        e.preventDefault();
         toggleTimer();
       } else if (e.code === 'KeyR') {
         resetTimer();
@@ -88,36 +114,14 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, mode, currentPreset]); // dependencies for toggleTimer scope
+  }, [isActive, mode]);
 
-  // Persist Settings
+  // Persist State
   useEffect(() => {
-    localStorage.setItem('pomo-settings', JSON.stringify(userSettings));
-    localStorage.setItem('pomo-active-preset', activePresetId);
     localStorage.setItem('pomo-settings', JSON.stringify(userSettings));
     localStorage.setItem('pomo-active-preset', activePresetId);
     localStorage.setItem('pomo-presets', JSON.stringify(presets));
   }, [userSettings, activePresetId, presets]);
-
-  // PRESET MANAGEMENT
-  const handleDeletePreset = (id) => {
-    if (presets.length <= 1) return;
-    const newPresets = presets.filter(p => p.id !== id);
-    setPresets(newPresets);
-    if (activePresetId === id) {
-      setActivePresetId(newPresets[0].id);
-      // Reset timer will happen due to effect dependency or manual call if needed, 
-      // but let's be safe and let the user reset or just let state update naturally.
-    }
-  };
-
-  const handleCreatePreset = () => {
-    if (!newPreset.name) return;
-    const id = 'custom-' + Date.now();
-    const presetToAdd = { ...newPreset, id, name: newPreset.name.substring(0, 10) }; // Limit name length
-    setPresets([...presets, presetToAdd]);
-    setNewPreset({ name: '', focus: 25, short: 5, long: 15 });
-  };
 
   // ACTIONS
   const toggleTimer = () => {
@@ -152,21 +156,15 @@ function App() {
     if (userSettings.sound) playCompleteSound();
     if (userSettings.haptics && 'vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 500]);
 
-    // Auto-switch logic (Smart Break)
+    // Auto-switch logic
     if (mode === 'focus') {
-      // Default to short break, user can change manually to long
       if (userSettings.autoBreak) {
         switchMode('shortBreak');
-        // Optional: Auto-start break? User didn't strictly request auto-start, just "trigger automatically".
-        // I'll leave it paused for safety, or auto-start. "trigger automatically" implies starting.
-        // Let's safe-start.
         setTimeout(() => toggleTimer(), 1000);
       } else {
-        // Just switch to break mode ready to start
         switchMode('shortBreak');
       }
     } else {
-      // End of break, back to focus
       switchMode('focus');
     }
   };
@@ -182,221 +180,109 @@ function App() {
     : mode === 'shortBreak' ? currentPreset.short * 60
       : currentPreset.long * 60;
 
-  const progress = ((currentDuration - timeLeft) / currentDuration) * 100;
+  const progress = ((currentDuration - timeLeft) / currentDuration) * 100 || 0;
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans text-gray-200">
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 font-sans text-gray-200 overflow-hidden">
+
+      {/* Background Decor */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#111_0%,#000_100%)] pointer-events-none"></div>
+
       <WatchCase>
-        {/* Header Branding */}
-        <div className="absolute top-2 left-0 right-0 text-center text-[10px] text-gray-500 font-bold tracking-[0.3em] font-sans">
-          CHRONO-90 // QUARTZ
-        </div>
+        {/* Top Branding Area */}
+        <div className="h-4"></div>
 
         {/* LCD Screen */}
-        <LCDScreen
-          mainDisplay={formatTime(timeLeft)}
-          subDisplay={realTime}
-          label={currentPreset.name.toUpperCase()}
-          mode={mode}
-          isActive={isActive}
-          progress={100 - progress} // Countdown bar
-        />
+        <div onClick={() => !isActive && setIsPresetSelectorOpen(true)} className="cursor-pointer group">
+          <LCDScreen
+            mainDisplay={formatTime(timeLeft)}
+            subDisplay={realTime}
+            label={currentPreset.name.toUpperCase()}
+            mode={mode}
+            isActive={isActive}
+            progress={100 - progress}
+          />
+          {!isActive && <div className="text-center text-[9px] text-gray-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">TAP TO CHANGE MODE</div>}
+        </div>
 
         {/* Control Deck */}
-        <div className="w-full grid grid-cols-2 gap-4">
-          <Button
-            variant="primary"
-            onClick={toggleTimer}
-            className={isActive ? "border-amber-900 bg-amber-900/20 text-amber-500" : ""}
-          >
-            {isActive ? <><Pause size={18} /> STOP</> : <><Play size={18} /> START</>}
-          </Button>
-          <Button variant="secondary" onClick={resetTimer}>
-            <RotateCcw size={18} /> RESET
-          </Button>
-        </div>
+        <div className="flex-1 flex flex-col justify-end gap-3 pb-2">
 
-        {/* Mode Toggles */}
-        <div className="w-full grid grid-cols-3 gap-2 mt-2">
-          {[
-            { id: 'focus', label: 'WORK', min: currentPreset.focus },
-            { id: 'shortBreak', label: 'SHORT', min: currentPreset.short },
-            { id: 'longBreak', label: 'LONG', min: currentPreset.long }
-          ].map((m) => (
-            <button
-              key={m.id}
-              onClick={() => switchMode(m.id)}
-              className={clsx(
-                "text-[10px] font-bold py-2 rounded border transition-colors uppercase",
-                mode === m.id
-                  ? "bg-gray-700 text-white border-gray-500 shadow-inner"
-                  : "bg-transparent text-gray-600 border-transparent hover:text-gray-400"
-              )}
+          {/* Main Action Buttons */}
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              variant="primary"
+              onClick={toggleTimer}
+              className={isActive ? "border-amber-900 bg-amber-900/20 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]" : ""}
             >
-              {m.label}<br />
-              <span className="text-[9px] opacity-60">{m.min}m</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Footer Controls (Presets & Settings) */}
-        <div className="w-full flex justify-between items-center mt-4 border-t border-gray-800 pt-4">
-          {/* Presets Button */}
-          <div className="relative group">
-            <button className="text-xs text-gray-500 hover:text-white flex items-center gap-1 uppercase tracking-wider font-bold">
-              PRESET: {currentPreset.id}
-            </button>
-            {/* Popover */}
-            <div className="absolute bottom-full left-0 mb-2 bg-gray-800 border border-gray-600 rounded-lg p-2 min-w-[150px] hidden group-hover:block z-50 shadow-xl">
-              {presets.map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => { setActivePresetId(p.id); resetTimer(); }}
-                  className={clsx(
-                    "p-2 text-xs hover:bg-gray-700 cursor-pointer rounded flex justify-between",
-                    activePresetId === p.id ? "text-green-400 font-bold" : "text-gray-400"
-                  )}>
-                  <span>{p.name}</span>
-                  <span>{p.focus}m</span>
-                </div>
-              ))}
-              <div className="border-t border-gray-700 mt-1 pt-1 text-[10px] text-center text-gray-500 italic">
-                (Edit in settings)
-              </div>
-            </div>
+              {isActive ? <><Pause size={20} /> STOP</> : <><Play size={20} /> START</>}
+            </Button>
+            <Button variant="secondary" onClick={resetTimer}>
+              <RotateCcw size={18} /> RESET
+            </Button>
           </div>
 
-          {/* Settings Toggle */}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className={clsx("p-2 rounded-full hover:bg-gray-800 transition-colors", showSettings && "text-green-400 bg-gray-800")}
-          >
-            <Settings size={16} />
-          </button>
-        </div>
-
-        {/* Settings Panel (Overlay) */}
-        {showSettings && (
-          <div className="absolute inset-x-4 bottom-20 bg-gray-800/95 backdrop-blur-md rounded-xl border border-gray-600 p-4 z-50 shadow-2xl animate-[fadeIn_0.2s_ease-out] max-h-[60vh] overflow-y-auto custom-scrollbar">
-            <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-              <h3 className="text-sm font-bold tracking-widest text-white uppercase">System Config</h3>
-              <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-white">✕</button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-300 flex items-center gap-2"><Volume2 size={14} /> AUDIO BEEPS</span>
-                <button
-                  onClick={() => setUserSettings(s => ({ ...s, sound: !s.sound }))}
-                  className={clsx("w-10 h-5 rounded-full relative transition-colors", userSettings.sound ? "bg-green-500" : "bg-gray-600")}
-                >
-                  <div className={clsx("absolute top-1 w-3 h-3 bg-white rounded-full transition-all", userSettings.sound ? "left-6" : "left-1")} />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-300 flex items-center gap-2"><Smartphone size={14} /> HAPTICS</span>
-                <button
-                  onClick={() => setUserSettings(s => ({ ...s, haptics: !s.haptics }))}
-                  className={clsx("w-10 h-5 rounded-full relative transition-colors", userSettings.haptics ? "bg-green-500" : "bg-gray-600")}
-                >
-                  <div className={clsx("absolute top-1 w-3 h-3 bg-white rounded-full transition-all", userSettings.haptics ? "left-6" : "left-1")} />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-300 flex items-center gap-2"><Signal size={14} /> AUTO-BREAK</span>
-                <button
-                  onClick={() => setUserSettings(s => ({ ...s, autoBreak: !s.autoBreak }))}
-                  className={clsx("w-10 h-5 rounded-full relative transition-colors", userSettings.autoBreak ? "bg-green-500" : "bg-gray-600")}
-                >
-                  <div className={clsx("absolute top-1 w-3 h-3 bg-white rounded-full transition-all", userSettings.autoBreak ? "left-6" : "left-1")} />
-                </button>
-              </div>
-            </div>
-
-            {/* PRESET MANAGER */}
-            <div className="mt-6 pt-4 border-t border-gray-700 space-y-4">
-              <h3 className="text-sm font-bold tracking-widest text-white uppercase mb-2">Manage Presets</h3>
-
-              {/* List */}
-              <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
-                {presets.map(p => (
-                  <div key={p.id} className="flex items-center justify-between text-xs bg-gray-900/50 p-2 rounded border border-gray-700">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-gray-300">{p.name}</span>
-                      <span className="text-[10px] text-gray-500">{p.focus}m / {p.short}m / {p.long}m</span>
-                    </div>
-                    {presets.length > 1 && (
-                      <button
-                        onClick={() => handleDeletePreset(p.id)}
-                        className="text-red-500 hover:text-red-400 p-1"
-                      >✕</button>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Add New */}
-              <div className="space-y-2 bg-gray-900/30 p-2 rounded border border-gray-700/50">
-                <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">New Preset</div>
-                <input
-                  type="text"
-                  placeholder="NAME (e.g. COOKING)"
-                  maxLength={10}
-                  value={newPreset.name}
-                  onChange={e => setNewPreset({ ...newPreset, name: e.target.value })}
-                  className="w-full bg-gray-950 border border-gray-700 rounded p-1.5 text-xs text-white placeholder-gray-600 focus:border-green-500 outline-none font-mono uppercase"
-                />
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] text-gray-500">WORK</label>
-                    <input
-                      type="number"
-                      min="1" max="99"
-                      value={newPreset.focus}
-                      onChange={e => setNewPreset({ ...newPreset, focus: parseInt(e.target.value) || 1 })}
-                      className="w-full bg-gray-950 border border-gray-700 rounded p-1 text-xs text-center text-green-400 font-mono"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] text-gray-500">SHORT</label>
-                    <input
-                      type="number"
-                      min="1" max="99"
-                      value={newPreset.short}
-                      onChange={e => setNewPreset({ ...newPreset, short: parseInt(e.target.value) || 1 })}
-                      className="w-full bg-gray-950 border border-gray-700 rounded p-1 text-xs text-center text-amber-400 font-mono"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] text-gray-500">LONG</label>
-                    <input
-                      type="number"
-                      min="1" max="99"
-                      value={newPreset.long}
-                      onChange={e => setNewPreset({ ...newPreset, long: parseInt(e.target.value) || 1 })}
-                      className="w-full bg-gray-950 border border-gray-700 rounded p-1 text-xs text-center text-amber-400 font-mono"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={handleCreatePreset}
-                  disabled={!newPreset.name}
-                  className="w-full bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-bold py-2 rounded uppercase tracking-widest border border-gray-600"
-                >
-                  Add Preset +
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 text-[10px] text-gray-500 text-center">
-              v1.0.0 // PWA READY
-            </div>
+          {/* Mode Pills */}
+          <div className="grid grid-cols-3 gap-2 bg-[#0a0a0a] p-1 rounded-lg border border-gray-800">
+            {[
+              { id: 'focus', label: 'WORK' },
+              { id: 'shortBreak', label: 'SHORT' },
+              { id: 'longBreak', label: 'LONG' }
+            ].map((m) => (
+              <button
+                key={m.id}
+                onClick={() => switchMode(m.id)}
+                className={clsx(
+                  "text-[10px] font-bold py-2 rounded transition-all uppercase tracking-wider",
+                  mode === m.id
+                    ? "bg-gray-800 text-white shadow-sm"
+                    : "bg-transparent text-gray-600 hover:text-gray-400"
+                )}
+              >
+                {m.label}
+              </button>
+            ))}
           </div>
-        )}
+
+          {/* Bottom Actions */}
+          <div className="flex justify-between items-center px-2 mt-2">
+            <button
+              onClick={() => setIsPresetSelectorOpen(true)}
+              className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest"
+            >
+              <List size={14} /> Mode Select
+            </button>
+
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 rounded-full hover:bg-gray-800 text-gray-500 hover:text-white transition-colors"
+            >
+              <Settings size={18} />
+            </button>
+          </div>
+        </div>
 
       </WatchCase>
+
+      {/* MODALS */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        userSettings={userSettings}
+        onUpdateSettings={handleUpdateSettings}
+        presets={presets}
+        onAddPreset={handleAddPreset}
+        onDeletePreset={handleDeletePreset}
+      />
+
+      <PresetSelectorModal
+        isOpen={isPresetSelectorOpen}
+        onClose={() => setIsPresetSelectorOpen(false)}
+        presets={presets}
+        activePresetId={activePresetId}
+        onSelectPreset={handleSelectPreset}
+      />
+
     </div>
   );
 }
