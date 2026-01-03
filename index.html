@@ -29,6 +29,17 @@
 </head>
 
 <body>
+  <div
+    style="position:fixed; top:0; left:0; width:100%; background:white; color:black; z-index:99999; padding:10px; font-weight:bold; font-size:20px; border-bottom:2px solid red;">
+    INLINE: <span id="js-status" style="color:red">FAIL</span><br />
+    BUNDLE: <span id="bundle-status" style="color:blue">WAITING</span>
+  </div>
+  <script>
+    try {
+      document.getElementById('js-status').innerText = "OK";
+      document.getElementById('js-status').style.color = "green";
+    } catch (e) { alert(e) }
+  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>

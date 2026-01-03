@@ -4,6 +4,15 @@ import App from './App.jsx'
 import './index.css'
 import { ErrorBoundary } from './components/common/ErrorBoundary.jsx'
 
+// SIGNAL BUNDLE LOADED
+try {
+  const el = document.getElementById('bundle-status');
+  if (el) {
+    el.innerText = "LOADED";
+    el.style.color = "green";
+  }
+} catch (e) { }
+
 // Force Unregister SW for debugging/cleanup
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(registrations => {
