@@ -9,17 +9,6 @@
     content="Professional 90s Digital Pomodoro Timer for productivity and deep work. Features custom presets, smart break logic, and a retro-futuristic interface." />
   <meta name="theme-color" content="#0f172a" />
   <title>Retro Pomodoro 90</title>
-  <script>
-    window.onerror = function (msg, url, line, col, error) {
-      // Prevent alert loops
-      if (window.hasAlertedError) return;
-      window.hasAlertedError = true;
-
-      var extra = error ? "\nStack: " + error.stack : "";
-      alert("System Error:\n" + msg + "\nLine: " + line + extra);
-      return false;
-    };
-  </script>
   <style>
     body {
       background-color: #0f172a;
@@ -29,17 +18,6 @@
 </head>
 
 <body>
-  <div
-    style="position:fixed; top:0; left:0; width:100%; background:white; color:black; z-index:99999; padding:10px; font-weight:bold; font-size:20px; border-bottom:2px solid red;">
-    INLINE: <span id="js-status" style="color:red">FAIL</span><br />
-    BUNDLE: <span id="bundle-status" style="color:blue">WAITING</span>
-  </div>
-  <script>
-    try {
-      document.getElementById('js-status').innerText = "OK";
-      document.getElementById('js-status').style.color = "green";
-    } catch (e) { alert(e) }
-  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
