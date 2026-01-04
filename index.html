@@ -5,20 +5,49 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/icon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="description"
-    content="Professional 90s Digital Pomodoro Timer for productivity and deep work. Features custom presets, smart break logic, and a retro-futuristic interface." />
-  <meta name="theme-color" content="#0f172a" />
-  <title>Retro Pomodoro 90</title>
+  <meta name="theme-color" content="#050505" />
+  <title>Retro Pomodoro</title>
   <style>
     body {
-      background-color: #0f172a;
-      color: white;
+      background-color: #050505;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      font-family: monospace;
+      overflow: hidden;
+      /* Prevent scroll on load */
+    }
+
+    #root {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #loader {
+      color: #444;
+      font-size: 12px;
+      text-align: center;
     }
   </style>
+  <script>
+    // Minimal error rep orter
+    window.onerror = function(msg, url, line, col, error) {
+      var loader = document.getElementById('loader');
+      if (loader) {
+        loader.style.color = 'red';
+        loader.innerText = "ERR: " + msg;
+      }
+    };
+  </script>
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div id="loader">INITIALIZING...</div>
+  </div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
