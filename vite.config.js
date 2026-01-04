@@ -1,17 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { viteSingleFile } from 'vite-plugin-singlefile'
 
 export default defineConfig({
-  // Use relative base path to handle any deployment subpath automatically
   base: './',
   plugins: [
-    react()
+    react(),
+    viteSingleFile()
   ],
   build: {
     target: 'esnext',
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: true,
+    sourcemap: false,
     minify: 'esbuild'
   }
 })
