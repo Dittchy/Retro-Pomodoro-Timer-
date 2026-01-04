@@ -15,7 +15,6 @@
       padding: 0;
       font-family: monospace;
       overflow: hidden;
-      /* Prevent scroll on load */
     }
 
     #root {
@@ -27,20 +26,41 @@
     }
 
     #loader {
-      color: #444;
-      font-size: 12px;
+      color: #666;
+      /* Visible on black */
+      font-size: 14px;
       text-align: center;
+      white-space: pre-wrap;
+      max-width: 90%;
     }
   </style>
   <script>
-    // Minimal error rep orter
-    window.onerror = function(msg, url, line, col, error) {
+    // Global Error Handler
+    window.logError = function (msg) {
       var loader = document.getElementById('loader');
       if (loader) {
-        loader.style.color = 'red';
-        loader.innerText = "ERR: " + msg;
+        loader.style.color = '#ff5555'; // Red
+        loader.innerText += "\n[ERR] " + msg;
       }
+    }
+
+    // Capture Runtime Errors
+    window.onerror = function (msg, url, line, col, error) {
+      window.logError(msg + " (" + line + ":" + col + ")");
+      return false;
     };
+
+    // Capture Resource Loading Errors (404s)
+    window.addEventListener('error', function (e) {
+      if (e.target.tagName && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+        window.logError("Failed to load resource: " + (e.target.src || e.target.href));
+      }
+    }, true); // Capture phase relevant for load errors
+
+    // Capture Promise Rejections
+    window.addEventListener('unhandledrejection', function (event) {
+      window.logError("Unhandled Promise: " + event.reason);
+    });
   </script>
   <script type="module" crossorigin src="/Retro-Pomodoro-Timer-/assets/index-Bjjd7UkC.js"></script>
   <link rel="stylesheet" crossorigin href="/Retro-Pomodoro-Timer-/assets/index-CTNoAdrh.css">
@@ -48,7 +68,7 @@
 
 <body>
   <div id="root">
-    <div id="loader">INITIALIZING...</div>
+    <div id="loader">SYSTEM BOOT...<br><small>(Waiting for React)</small></div>
   </div>
 </body>
 
