@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
-import { Volume2, Smartphone, Signal, Trash2, Plus } from 'lucide-react';
+import { Volume2, Smartphone, Signal, Trash2, Plus, Clock } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const SettingsModal = ({
@@ -42,6 +42,31 @@ export const SettingsModal = ({
                     active={userSettings.sound}
                     onClick={() => onUpdateSettings({ sound: !userSettings.sound })}
                 />
+
+                {/* Ticking Sound Option */}
+                <div>
+                    <ToggleOption
+                        icon={<Clock size={16} />}
+                        label="Ticking Sound"
+                        active={userSettings.ticking}
+                        onClick={() => onUpdateSettings({ ticking: !userSettings.ticking })}
+                    />
+                    {userSettings.ticking && (
+                        <div className="pl-9 pr-2 pt-2 animate-[fadeIn_0.3s_ease-out]">
+                            <div className="flex items-center gap-3 bg-gray-900/50 p-2 rounded-lg border border-gray-800">
+                                <span className="text-[9px] uppercase font-bold text-gray-500">Vol</span>
+                                <input
+                                    type="range"
+                                    min="0" max="100"
+                                    value={userSettings.tickingVolume ?? 50}
+                                    onChange={(e) => onUpdateSettings({ tickingVolume: parseInt(e.target.value) })}
+                                    className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                                />
+                                <span className="text-[10px] font-mono text-green-400 w-6 text-right">{userSettings.tickingVolume ?? 50}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <ToggleOption
                     icon={<Smartphone size={16} />}
                     label="Haptics"

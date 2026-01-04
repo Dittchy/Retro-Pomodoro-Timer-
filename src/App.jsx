@@ -4,9 +4,10 @@ import { LCDScreen } from './components/display/LCDScreen';
 import { Button } from './components/controls/Button';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { PresetSelectorModal } from './components/modals/PresetSelectorModal';
+import { StatsModal } from './components/modals/StatsModal';
 import { useWakeLock } from './hooks/useWakeLock';
-import { playStartSound, playStopSound, playCompleteSound } from './utils/sound';
-import { Play, Pause, RotateCcw, Settings, Clock, List } from 'lucide-react';
+import { playStartSound, playStopSound, playCompleteSound, playTickSound } from './utils/sound';
+import { Play, Pause, RotateCcw, Settings, Clock, List, BarChart2 } from 'lucide-react';
 import { clsx } from 'clsx';
 
 // Constants
@@ -25,8 +26,13 @@ function App() {
   const [activePresetId, setActivePresetId] = useState(() => localStorage.getItem('pomo-active-preset') || 'std');
   const [userSettings, setUserSettings] = useState(() => {
     const saved = localStorage.getItem('pomo-settings');
-    // Ensure username property exists
-    return saved ? { username: '', ...JSON.parse(saved) } : { sound: true, haptics: true, autoBreak: false, username: '' };
+    // Ensure properties exist
+    const defaults = { sound: true, haptics: true, autoBreak: false, username: '', ticking: false, tickingVolume: 50 };
+    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+  });
+  const [stats, setStats] = useState(() => {
+    const saved = localStorage.getItem('pomo-stats');
+    return saved ? JSON.parse(saved) : { totalFocusTime: 0, totalShortBreakTime: 0, totalLongBreakTime: 0, presetStats: {} };
   });
 
   // SESSION STATE
@@ -42,6 +48,7 @@ function App() {
   // MODAL STATE
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPresetSelectorOpen, setIsPresetSelectorOpen] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   // REFS & HOOKS
   const { requestWakeLock, releaseWakeLock } = useWakeLock();
@@ -108,12 +115,17 @@ function App() {
     if (isActive) requestWakeLock(); else releaseWakeLock();
 
     if (isActive && timeLeft > 0) {
-      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+        if (userSettings.ticking) {
+          playTickSound(userSettings.tickingVolume);
+        }
+      }, 1000);
     } else if (timeLeft === 0 && isActive) {
       handleComplete();
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, userSettings]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -135,7 +147,8 @@ function App() {
     localStorage.setItem('pomo-settings', JSON.stringify(userSettings));
     localStorage.setItem('pomo-active-preset', activePresetId);
     localStorage.setItem('pomo-presets', JSON.stringify(presets));
-  }, [userSettings, activePresetId, presets]);
+    localStorage.setItem('pomo-stats', JSON.stringify(stats));
+  }, [userSettings, activePresetId, presets, stats]);
 
   // ACTIONS
   const toggleTimer = () => {
@@ -170,6 +183,9 @@ function App() {
     if (userSettings.sound) playCompleteSound();
     if (userSettings.haptics && 'vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 500]);
 
+    // Update Stats
+    updateStats();
+
     // Auto-switch logic
     if (mode === 'focus') {
       if (userSettings.autoBreak) {
@@ -181,6 +197,35 @@ function App() {
     } else {
       switchMode('focus');
     }
+  };
+
+  const updateStats = () => {
+    const durationInMinutes = mode === 'focus' ? currentPreset.focus
+      : mode === 'shortBreak' ? currentPreset.short
+        : currentPreset.long;
+
+    setStats(prev => {
+      const newStats = { ...prev };
+
+      // Update totals
+      if (mode === 'focus') newStats.totalFocusTime = (newStats.totalFocusTime || 0) + durationInMinutes;
+      else if (mode === 'shortBreak') newStats.totalShortBreakTime = (newStats.totalShortBreakTime || 0) + durationInMinutes;
+      else if (mode === 'longBreak') newStats.totalLongBreakTime = (newStats.totalLongBreakTime || 0) + durationInMinutes;
+
+      // Update preset stats
+      if (mode === 'focus' && currentPreset) {
+        const pid = currentPreset.id;
+        const pStats = newStats.presetStats?.[pid] || { name: currentPreset.name, count: 0, timeSpent: 0 };
+
+        pStats.name = currentPreset.name;
+        pStats.count += 1;
+        pStats.timeSpent += durationInMinutes;
+
+        newStats.presetStats = { ...newStats.presetStats, [pid]: pStats };
+      }
+
+      return newStats;
+    });
   };
 
   // FORMATTING
@@ -215,7 +260,7 @@ function App() {
           )}
         >
           <LCDScreen
-            mainDisplay={isBooting ? (userSettings.bootMessage || "SYSTEM v2.0") : formatTime(timeLeft)}
+            mainDisplay={isBooting ? (userSettings.bootMessage || "SYSTEM v2.1") : formatTime(timeLeft)}
             subDisplay={realTime}
             label={currentPreset.name.toUpperCase()}
             mode={mode}
@@ -274,12 +319,22 @@ function App() {
               <List size={14} /> Mode Select
             </button>
 
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2 rounded-full hover:bg-gray-800 text-gray-500 hover:text-white transition-colors"
-            >
-              <Settings size={18} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsStatsOpen(true)}
+                className="p-2 rounded-full hover:bg-gray-800 text-gray-500 hover:text-green-400 transition-colors"
+                title="Statistics"
+              >
+                <BarChart2 size={18} />
+              </button>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 rounded-full hover:bg-gray-800 text-gray-500 hover:text-white transition-colors"
+                title="Settings"
+              >
+                <Settings size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -302,6 +357,12 @@ function App() {
         presets={presets}
         activePresetId={activePresetId}
         onSelectPreset={handleSelectPreset}
+      />
+
+      <StatsModal
+        isOpen={isStatsOpen}
+        onClose={() => setIsStatsOpen(false)}
+        stats={stats}
       />
 
     </div>
