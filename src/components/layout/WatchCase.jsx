@@ -9,7 +9,7 @@ export const WatchCase = ({ children, className }) => {
             // Rounded corners, thick bezel
             "bg-[#1a1a1a] rounded-3xl shadow-2xl",
             "border-[10px] border-[#0a0a0a]", // Outer bumper
-            "max-w-xl w-full mx-auto min-h-[600px]",
+            "max-w-[600px] w-full mx-auto min-h-[700px]",
             className
         )}>
 
