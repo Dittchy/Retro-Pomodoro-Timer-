@@ -20,7 +20,7 @@ export const SettingsModal = ({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="System Configuration">
+        <Modal isOpen={isOpen} onClose={onClose} title="System Configuration v2.2">
             {/* BOOT CONFIG */}
             <div className="mb-6 bg-gray-800/50 p-3 rounded-lg border border-gray-700 space-y-2">
                 <div className="text-[10px] font-bold text-gray-400 uppercase">Boot Message</div>
